@@ -1,0 +1,43 @@
+name: Scrape UFC data
+
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: "Test run: number of events/fighters (leave blank for full scrape)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4
+
+      - name: Run scraper
+        env:
+          LIMIT: ${{ github.event.inputs.limit }}
+        run: |
+          if [ -n "$LIMIT" ]; then
+            python scraper.py --limit "$LIMIT"
+          else
+            python scraper.py
+          fi
+
+      - name: Commit data
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add -f ufc_data
+          git diff --staged --quiet || (git commit -m "Update UFC data" && git push)
