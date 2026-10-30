@@ -29,7 +29,12 @@ CACHE_DIR = ".cache"
 DELAY = 0.6  # seconds between real requests
 
 session = requests.Session()
-session.headers["User-Agent"] = "Mozilla/5.0 (personal UFC stats project)"
+session.headers.update({
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                  "(KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml",
+    "Accept-Language": "en-US,en;q=0.9",
+})
 
 
 # ---------- helpers ----------
@@ -158,6 +163,12 @@ def event_list(limit=None):
             "date": txt(row.select_one(".b-statistics__date")),
             "location": txt(cols[1]) if len(cols) > 1 else None,
         })
+    if not events:
+        print("DIAGNOSTIC: no events parsed from the events page")
+        print("page title:", txt(soup.title))
+        print("html length:", len(str(soup)))
+        print("first 600 chars:", str(soup)[:600])
+        raise SystemExit("Stopping: events page had no recognizable rows (blocked or layout changed).")
     return events[:limit] if limit else events
 
 
